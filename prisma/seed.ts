@@ -4,14 +4,19 @@ const prisma = new PrismaClient()
 
 async function main() {
   const restaurant = await prisma.restaurant.upsert({
-    where: { slug: "marios-pizzeria" },
-    update: {},
+    where: { ownerId: "beb66439-f929-49b9-9241-4da490408856" },
+    update: {
+      name: "Mario's Pizzeria",
+      slug: "marios-pizzeria",
+      address: "901 Market St, San Francisco, CA 94103",
+      phone: "+14155551234",
+    },
     create: {
       name: "Mario's Pizzeria",
       slug: "marios-pizzeria",
       address: "901 Market St, San Francisco, CA 94103",
       phone: "+14155551234",
-      ownerId: "demo-owner-id",
+      ownerId: "beb66439-f929-49b9-9241-4da490408856",
       passTip: true,
       deliveryFee: 499,
       reducedFee: 299,
