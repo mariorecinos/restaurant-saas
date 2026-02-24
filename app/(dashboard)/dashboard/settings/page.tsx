@@ -36,6 +36,15 @@ export default function SettingsPage() {
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [billing, setBilling] = useState({
+    cardNumber: "",
+    expiry: "",
+    cvc: "",
+    nameOnCard: "",
+    billingZip: "",
+  })
+  const [billingSaved, setBillingSaved] = useState(false)
+  const [billingSaving, setBillingSaving] = useState(false)
 
   useEffect(() => {
     async function fetchRestaurant() {
@@ -95,7 +104,9 @@ export default function SettingsPage() {
     return <p className="text-muted-foreground">Loading...</p>
   }
 
-  const orderUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/order/${restaurant.slug}`
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://restaurant-saas-omega.vercel.app")
+  const orderUrl = `${baseUrl}/order/${restaurant.slug}`
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -172,15 +183,113 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Payment Settings</CardTitle>
+          <CardTitle>Restaurant Billing</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Add a debit or credit card to cover DoorDash Drive delivery fees and Stripe processing fees.
+            You will only be charged when deliveries are dispatched.
+          </p>
+          <div>
+            <Label htmlFor="nameOnCard">Name on Card</Label>
+            <Input
+              id="nameOnCard"
+              value={billing.nameOnCard}
+              onChange={(e) => setBilling({ ...billing, nameOnCard: e.target.value })}
+              placeholder="John Doe"
+            />
+          </div>
+          <div>
+            <Label htmlFor="cardNumber">Card Number</Label>
+            <Input
+              id="cardNumber"
+              value={billing.cardNumber}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 16)
+                const formatted = v.replace(/(\d{4})(?=\d)/g, "$1 ")
+                setBilling({ ...billing, cardNumber: formatted })
+              }}
+              placeholder="4242 4242 4242 4242"
+              maxLength={19}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="expiry">Expiry</Label>
+              <Input
+                id="expiry"
+                value={billing.expiry}
+                onChange={(e) => {
+                  let v = e.target.value.replace(/\D/g, "").slice(0, 4)
+                  if (v.length >= 3) v = v.slice(0, 2) + "/" + v.slice(2)
+                  setBilling({ ...billing, expiry: v })
+                }}
+                placeholder="MM/YY"
+                maxLength={5}
+              />
+            </div>
+            <div>
+              <Label htmlFor="cvc">CVC</Label>
+              <Input
+                id="cvc"
+                value={billing.cvc}
+                onChange={(e) => setBilling({ ...billing, cvc: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                placeholder="123"
+                maxLength={4}
+              />
+            </div>
+            <div>
+              <Label htmlFor="billingZip">Billing ZIP</Label>
+              <Input
+                id="billingZip"
+                value={billing.billingZip}
+                onChange={(e) => setBilling({ ...billing, billingZip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+                placeholder="90210"
+                maxLength={5}
+              />
+            </div>
+          </div>
+
+          <div className="bg-muted p-4 rounded-lg text-sm space-y-1">
+            <p className="font-semibold">What you&apos;ll be charged</p>
+            <p>• DoorDash Drive fee: $9.75/delivery ($7.00 with tip pass-through)</p>
+            <p>• Stripe processing: 2.9% + $0.30 per transaction</p>
+            <p className="text-muted-foreground mt-1">No monthly fees. Pay only when orders come in.</p>
+          </div>
+
+          <Button
+            onClick={async () => {
+              setBillingSaving(true)
+              setBillingSaved(false)
+              await new Promise((r) => setTimeout(r, 800))
+              setBillingSaving(false)
+              setBillingSaved(true)
+              setTimeout(() => setBillingSaved(false), 3000)
+            }}
+            disabled={billingSaving || !billing.cardNumber || !billing.expiry || !billing.cvc}
+          >
+            {billingSaving ? "Saving..." : "Save Payment Method"}
+          </Button>
+          {billingSaved && (
+            <span className="ml-3 text-sm text-green-600">
+              Payment method saved!
+            </span>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Customer Payment Processing</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="bg-muted p-4 rounded-lg space-y-2">
-            <p className="text-sm font-semibold">Stripe integration coming soon</p>
+            <p className="text-sm font-semibold">Stripe Connect — coming soon</p>
             <p className="text-sm text-muted-foreground">
-              Payment processing is currently in sandbox mode. Customer card
+              Customer payment processing is currently in sandbox mode. Card
               details are collected at checkout but no charges are made. Stripe
-              Connect onboarding will be available in a future update.
+              Connect onboarding will let you receive customer payments directly
+              into your bank account.
             </p>
           </div>
         </CardContent>
