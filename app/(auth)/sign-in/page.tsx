@@ -82,6 +82,30 @@ export default function SignInPage() {
               {loading ? "Signing In..." : "Sign In"}
             </Button>
 
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setEmail("demo@restaurantsaas.com")
+                setPassword("demo1234")
+              }}
+            >
+              🍕 Fill Demo Credentials
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Demo account: view a pre-built restaurant dashboard
+            </p>
+
             <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
               <Link href="/sign-up" className="text-primary underline">
