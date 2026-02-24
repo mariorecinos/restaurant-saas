@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getAuthenticatedOwner } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,12 +31,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { restaurant, error: authError } = await getAuthenticatedOwner()
+    if (authError) return authError
+
     const body = await request.json()
-    const { restaurantId, name, description, price, category, image } = body
+    const { name, description, price, category, image } = body
 
     const menuItem = await prisma.menuItem.create({
       data: {
-        restaurantId,
+        restaurantId: restaurant!.id,
         name,
         description,
         price,
@@ -56,6 +60,9 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const { restaurant, error: authError } = await getAuthenticatedOwner()
+    if (authError) return authError
+
     const body = await request.json()
     const { id, ...data } = body
 
@@ -64,6 +71,11 @@ export async function PATCH(request: NextRequest) {
         { error: "Menu item id is required" },
         { status: 400 }
       )
+    }
+
+    const item = await prisma.menuItem.findUnique({ where: { id } })
+    if (!item || item.restaurantId !== restaurant!.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const menuItem = await prisma.menuItem.update({
@@ -83,6 +95,9 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const { restaurant, error: authError } = await getAuthenticatedOwner()
+    if (authError) return authError
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
@@ -91,6 +106,11 @@ export async function DELETE(request: NextRequest) {
         { error: "Menu item id is required" },
         { status: 400 }
       )
+    }
+
+    const item = await prisma.menuItem.findUnique({ where: { id } })
+    if (!item || item.restaurantId !== restaurant!.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     await prisma.menuItem.delete({ where: { id } })

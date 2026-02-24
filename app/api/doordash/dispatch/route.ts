@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createQuote, acceptQuote } from "@/lib/doordash"
+import { getAuthenticatedOwner } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
+    const { restaurant, error: authError } = await getAuthenticatedOwner()
+    if (authError) return authError
+
     const { orderId } = await request.json()
 
     const order = await prisma.order.findUnique({
@@ -13,6 +17,10 @@ export async function POST(request: NextRequest) {
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 })
+    }
+
+    if (order.restaurantId !== restaurant!.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     if (order.fulfillment !== "DELIVERY") {

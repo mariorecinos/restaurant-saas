@@ -130,6 +130,31 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Seed Demo Data
+
+```bash
+npx prisma db seed
+```
+
+This creates **Mario's Pizzeria** with 6 menu items. Visit `/order/marios-pizzeria` to see the ordering page.
+
+### How to Test
+
+1. **Landing Page**: Visit `/` — see the savings calculator, pricing, and CTA sections
+2. **Ordering Page**: Visit `/order/marios-pizzeria` (after seeding) — browse menu, add to cart, choose delivery/pickup
+3. **Sign Up**: Click "Start Free" → create an account → set up your restaurant in the dashboard
+4. **Dashboard**: `/dashboard` — manage menu, view orders, update settings, see analytics
+5. **DoorDash Delivery**: From the dashboard, click "Dispatch" on a delivery order to create a DoorDash Drive quote and accept it
+6. **Stripe Payments**: Use test card `4242 4242 4242 4242` (any future exp, any CVC)
+
+### DoorDash Webhook Testing
+
+```bash
+curl -X POST https://your-url.vercel.app/api/doordash/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"event_name":"dasher_confirmed","external_delivery_id":"YOUR_DELIVERY_ID","tracking_url":"https://example.com/track"}'
+```
+
 ---
 
 ## 📊 Key Features

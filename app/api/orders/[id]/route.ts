@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getAuthenticatedOwner } from "@/lib/auth"
 
 export async function GET(
   request: NextRequest,
@@ -31,11 +32,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { restaurant, error: authError } = await getAuthenticatedOwner()
+    if (authError) return authError
+
     const { id } = await params
+    const order = await prisma.order.findUnique({ where: { id } })
+
+    if (!order || order.restaurantId !== restaurant!.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const body = await request.json()
     const { status, ddDeliveryId, ddTrackingUrl } = body
 
-    const order = await prisma.order.update({
+    const updated = await prisma.order.update({
       where: { id },
       data: {
         ...(status ? { status } : {}),
@@ -44,7 +54,7 @@ export async function PATCH(
       },
     })
 
-    return NextResponse.json(order)
+    return NextResponse.json(updated)
   } catch (error) {
     console.error("Error updating order:", error)
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { slugify } from "@/lib/utils"
+import { getAuthenticatedOwner } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,19 +51,24 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await (await import("@/lib/supabase/server")).createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const body = await request.json()
-    const { name, address, phone, ownerId, logo } = body
+    const { name, address, phone, logo } = body
 
     let slug = slugify(name)
 
-    // Ensure unique slug
     const existing = await prisma.restaurant.findUnique({ where: { slug } })
     if (existing) {
       slug = `${slug}-${Date.now().toString(36)}`
     }
 
     const restaurant = await prisma.restaurant.create({
-      data: { name, slug, address, phone, ownerId, logo },
+      data: { name, slug, address, phone, ownerId: user.id, logo },
     })
 
     return NextResponse.json(restaurant, { status: 201 })
@@ -77,14 +83,14 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const { restaurant: authRestaurant, error: authError } = await getAuthenticatedOwner()
+    if (authError) return authError
+
     const body = await request.json()
     const { id, ...data } = body
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "Restaurant id is required" },
-        { status: 400 }
-      )
+    if (id !== authRestaurant!.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const restaurant = await prisma.restaurant.update({

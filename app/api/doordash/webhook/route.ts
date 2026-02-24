@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { OrderStatus } from "@prisma/client"
 
-const EVENT_STATUS_MAP: Record<string, string> = {
-  dasher_confirmed: "DRIVER_ASSIGNED",
-  dasher_enroute_to_pickup: "ENROUTE_TO_PICKUP",
-  dasher_confirmed_pickup_arrival: "ARRIVED_AT_PICKUP",
-  dasher_picked_up: "PICKED_UP",
-  dasher_enroute_to_dropoff: "ENROUTE_TO_DROPOFF",
-  dasher_confirmed_dropoff_arrival: "ARRIVED_AT_DROPOFF",
-  dasher_dropped_off: "DELIVERED",
-  delivered: "DELIVERED",
-  delivery_cancelled: "CANCELLED",
+const EVENT_STATUS_MAP: Record<string, OrderStatus> = {
+  dasher_confirmed: OrderStatus.DRIVER_ASSIGNED,
+  dasher_enroute_to_pickup: OrderStatus.ENROUTE_TO_PICKUP,
+  dasher_confirmed_pickup_arrival: OrderStatus.ARRIVED_AT_PICKUP,
+  dasher_picked_up: OrderStatus.PICKED_UP,
+  dasher_enroute_to_dropoff: OrderStatus.ENROUTE_TO_DROPOFF,
+  dasher_confirmed_dropoff_arrival: OrderStatus.ARRIVED_AT_DROPOFF,
+  dasher_dropped_off: OrderStatus.DELIVERED,
+  delivered: OrderStatus.DELIVERED,
+  delivery_cancelled: OrderStatus.CANCELLED,
 }
 
 export async function POST(request: NextRequest) {
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        status: newStatus as never,
+        status: newStatus,
         ...(tracking_url ? { ddTrackingUrl: tracking_url } : {}),
       },
     })
