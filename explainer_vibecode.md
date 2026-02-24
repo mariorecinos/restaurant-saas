@@ -4,7 +4,7 @@
 **One-Line Description:** A SaaS platform where restaurants get their own branded ordering page and offer delivery via DoorDash Drive or pickup — without paying 30% marketplace commissions.
 
 **Team Members:**  
-- [Your Name] — [your-email@example.com]
+- Mario Recinos — dm.mariorecinos@gmail.com
 
 **Live Deployment URL:** [https://restaurant-saas-git-main-mariorecinos-projects.vercel.app](https://restaurant-saas-git-main-mariorecinos-projects.vercel.app)  
 **GitHub Repository URL:** [https://github.com/mariorecinos/restaurant-saas](https://github.com/mariorecinos/restaurant-saas)
