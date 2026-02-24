@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍽️ RestaurantSaaS
 
-## Getting Started
+**Stop paying 30% to marketplace apps.** Get your own branded ordering page in minutes — with delivery via DoorDash Drive or pickup — and keep your profits.
 
-First, run the development server:
+![RestaurantSaaS Landing Page](landing_page.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🚀 What It Does
+
+RestaurantSaaS is a platform where independent restaurants can:
+
+- **Sign up and create a branded ordering page** in under 5 minutes
+- **Accept delivery orders** powered by DoorDash Drive at a flat fee ($9.75, or $7.00 with tip pass-through) — not 30% commission
+- **Accept pickup orders** at $0 delivery fee
+- **Track savings** vs. marketplace fees in real time on their dashboard
+- **Manage their menu** with a full CRUD builder
+- **View analytics** — revenue, top items, busiest days, cumulative savings
+
+## 💰 The Problem
+
+Restaurants on DoorDash, Grubhub, and Uber Eats pay **30% commission** on every order. On a $35 order, that's $10.50 gone — while most restaurants operate on 3–9% margins.
+
+**RestaurantSaaS replaces that** with:
+| | Marketplace | RestaurantSaaS |
+|---|---|---|
+| Delivery fee | 30% of order ($10.50 on $35) | Flat $7.00–$9.75 |
+| Pickup fee | ~15% of order | **$0** |
+| Monthly savings (200 orders) | — | **$2,100+** |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) |
+| Database | Supabase (PostgreSQL) |
+| ORM | Prisma 5 |
+| Auth | Supabase Auth (SSR cookies) |
+| Payments | Stripe (sandbox) |
+| Delivery | DoorDash Drive API (sandbox) |
+| Styling | Tailwind CSS + shadcn/ui |
+| Deployment | Vercel |
+
+---
+
+## 📁 Project Structure
+
+```
+app/
+├── page.tsx                          # Landing page with savings calculator
+├── (auth)/
+│   ├── sign-up/page.tsx              # Restaurant owner signup
+│   └── sign-in/page.tsx              # Restaurant owner sign in
+├── (dashboard)/
+│   └── dashboard/
+│       ├── layout.tsx                # Auth-protected layout with nav
+│       ├── page.tsx                  # Live order feed + savings counter
+│       ├── menu/page.tsx             # Menu builder (CRUD)
+│       ├── settings/page.tsx         # Restaurant profile settings
+│       └── analytics/page.tsx        # Monthly savings report
+├── order/
+│   └── [slug]/page.tsx               # Public customer ordering page
+└── api/
+    ├── orders/route.ts               # POST/GET orders
+    ├── orders/[id]/route.ts          # GET/PATCH single order
+    ├── doordash/dispatch/route.ts    # Accept quote → dispatch driver
+    ├── doordash/quote/route.ts       # Get delivery quote
+    ├── doordash/webhook/route.ts     # DoorDash status webhooks
+    ├── doordash/cancel/route.ts      # Cancel delivery
+    ├── doordash/validate-address/    # Validate delivery address
+    ├── menu/route.ts                 # CRUD menu items
+    └── restaurants/route.ts          # Restaurant profile CRUD
+
+lib/
+├── prisma.ts                         # Prisma client singleton
+├── doordash.ts                       # DoorDash Drive API (JWT signing, quote, accept, cancel)
+├── stripe.ts                         # Stripe client
+├── utils.ts                          # Fee calculator, formatCents, slugify
+└── supabase/
+    ├── client.ts                     # Browser Supabase client
+    └── server.ts                     # Server Supabase client (SSR cookies)
+
+components/
+├── dashboard/                        # OrderCard, OrderFeed, SavingsCounter
+├── menu/                             # MenuBuilder
+├── ordering/                         # MenuDisplay, Cart
+├── landing/                          # SavingsCalculator
+└── ui/                               # shadcn/ui primitives
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚗 DoorDash Drive Integration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The platform uses DoorDash Drive's **quote → accept** flow:
 
-## Learn More
+1. Customer places a delivery order
+2. Restaurant confirms → system creates a DoorDash quote
+3. Quote accepted → Dasher dispatched
+4. Status updates via webhooks: `confirmed → enroute → pickup → delivered`
 
-To learn more about Next.js, take a look at the following resources:
+**Pricing:**
+- Base rate: $9.75 (first 5 miles)
+- Tip discount: -$2.75 if tips passed to Dasher
+- Minimum fee with tips: **$7.00**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🏃 Getting Started
 
-## Deploy on Vercel
+### Prerequisites
+- Node.js 20+
+- Supabase project
+- Stripe account (test mode)
+- DoorDash Developer Portal access
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Setup
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+git clone <repo-url>
+cd restaurant-saas
+npm install
+cp .env.example .env.local
+# Fill in your credentials in .env.local
+npx prisma db push
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 📊 Key Features
+
+- **Savings Calculator** — Interactive widget showing exact savings vs. marketplace fees
+- **Real-time Order Feed** — Dashboard updates with incoming orders
+- **Menu Builder** — Full CRUD with categories, pricing, availability toggles
+- **DoorDash Delivery** — Quote-based dispatch with live tracking
+- **Address Validation** — Validates delivery addresses via DoorDash API before checkout
+- **Analytics Dashboard** — Revenue, order volume, top items, busiest days
+- **Supabase Auth** — Server-side authentication with cookie-based sessions
+
+---
+
+## 📄 License
+
+MIT
