@@ -6,8 +6,8 @@
 **Team Members:**  
 - [Your Name] — [your-email@example.com]
 
-**Live Deployment URL:** [https://your-vercel-url.vercel.app]  
-**GitHub Repository URL:** [https://github.com/your-username/restaurant-saas]
+**Live Deployment URL:** [https://restaurant-saas-git-main-mariorecinos-projects.vercel.app](https://restaurant-saas-git-main-mariorecinos-projects.vercel.app)  
+**GitHub Repository URL:** [https://github.com/mariorecinos/restaurant-saas](https://github.com/mariorecinos/restaurant-saas)
 
 ---
 

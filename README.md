@@ -41,7 +41,7 @@ Restaurants on DoorDash, Grubhub, and Uber Eats pay **30% commission** on every 
 | Payments | Stripe (sandbox) |
 | Delivery | DoorDash Drive API (sandbox) |
 | Styling | Tailwind CSS + shadcn/ui |
-| Deployment | Vercel |
+| Deployment | [Vercel](https://restaurant-saas-git-main-mariorecinos-projects.vercel.app) |
 
 ---
 
