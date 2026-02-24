@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Restaurant {
+  id           String     @id @default(cuid())
+  name         String
+  slug         String     @unique
+  address      String
+  phone        String
+  logo         String?
+  ownerId      String     @unique
+  stripeKey    String?
+  passTip      Boolean    @default(true)
+  deliveryFee       Int    @default(499)   // customer-facing delivery fee in cents
+  freeDeliveryMin   Int    @default(10000) // subtotal in cents for free delivery (0 = never free)
+  reducedFee        Int    @default(299)   // reduced fee in cents
+  reducedFeeMin     Int    @default(3500)  // subtotal in cents to qualify for reduced fee
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  menuItems    MenuItem[]
+  orders       Order[]
+}
+
+model MenuItem {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  name         String
+  description  String?
+  price        Int
+  category     String
+  available    Boolean    @default(true)
+  image        String?
+  createdAt    DateTime   @default(now())
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  restaurantId     String
+  restaurant       Restaurant  @relation(fields: [restaurantId], references: [id])
+  customerName     String
+  customerPhone    String
+  customerAddress  String?
+  fulfillment      Fulfillment @default(DELIVERY)
+  items            Json
+  subtotal         Int
+  deliveryFee      Int         @default(0)
+  marketplaceFee   Int         @default(0)
+  savings          Int         @default(0)
+  tip              Int         @default(0)
+  status           OrderStatus @default(PENDING)
+  stripePaymentId  String?
+  ddDeliveryId     String?
+  ddTrackingUrl    String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+enum Fulfillment {
+  DELIVERY
+  PICKUP
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DRIVER_ASSIGNED
+  ENROUTE_TO_PICKUP
+  ARRIVED_AT_PICKUP
+  PICKED_UP
+  ENROUTE_TO_DROPOFF
+  ARRIVED_AT_DROPOFF
+  DELIVERED
+  CANCELLED
+}
