@@ -275,27 +275,37 @@ export default function OrderCard({
           <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
         )}
 
-        <div className="flex gap-2 pt-2">
-          {order.status === "PENDING" && (
-            <Button
-              onClick={() => onConfirm(order.id)}
-              className="flex-1"
-              disabled={loading}
-            >
-              {loading ? "Processing..." : "Confirm"}
-            </Button>
-          )}
-          {CANCELLABLE_STATUSES.includes(order.status) && (
-            <Button
-              variant="destructive"
-              onClick={() => onCancel(order.id)}
-              className="flex-1"
-              disabled={loading}
-            >
-              {loading ? "Cancelling..." : "Cancel"}
-            </Button>
-          )}
-        </div>
+        {order.status === "DELIVERED" ? (
+          <div className="flex items-center gap-2 pt-2 text-green-600 font-medium text-sm">
+            <span>✓ Completed</span>
+          </div>
+        ) : order.status === "CANCELLED" ? (
+          <div className="flex items-center gap-2 pt-2 text-muted-foreground text-sm">
+            <span>✕ Cancelled</span>
+          </div>
+        ) : (
+          <div className="flex gap-2 pt-2">
+            {order.status === "PENDING" && (
+              <Button
+                onClick={() => onConfirm(order.id)}
+                className="flex-1"
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Confirm"}
+              </Button>
+            )}
+            {CANCELLABLE_STATUSES.includes(order.status) && (
+              <Button
+                variant="destructive"
+                onClick={() => onCancel(order.id)}
+                className="flex-1"
+                disabled={loading}
+              >
+                {loading ? "Cancelling..." : "Cancel"}
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
