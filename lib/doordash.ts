@@ -83,7 +83,9 @@ export async function createQuote(params: DeliveryParams) {
 
   if (!response.ok) {
     const errorText = await response.text()
-    console.error("[DoorDash] Quote error response:", errorText)
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[DoorDash] Quote error response:", errorText)
+    }
     let parsed
     try { parsed = JSON.parse(errorText) } catch { parsed = { message: errorText } }
     const err = new Error(parsed.message || errorText)
