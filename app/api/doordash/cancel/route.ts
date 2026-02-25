@@ -22,6 +22,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    if (["DELIVERED", "CANCELLED"].includes(order.status)) {
+      return NextResponse.json(
+        { error: `Order cannot be cancelled — it is already ${order.status.toLowerCase()}` },
+        { status: 409 }
+      )
+    }
+
     // If there's an active DoorDash delivery, cancel it
     if (order.ddDeliveryId) {
       try {
