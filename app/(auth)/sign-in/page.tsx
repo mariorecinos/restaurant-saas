@@ -42,7 +42,17 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col">
+      <nav className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center">
+            <Link href="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
+              RestaurantSaaS
+            </Link>
+          </div>
+        </div>
+      </nav>
+      <div className="flex-1 flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
@@ -115,6 +125,7 @@ export default function SignInPage() {
           </form>
         </CardContent>
       </Card>
+    </div>
     </div>
   )
 }
