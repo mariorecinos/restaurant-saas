@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,6 +26,15 @@ interface Order {
   status: string
   ddTrackingUrl: string | null
   createdAt: string
+}
+
+interface DoorDashStatus {
+  delivery_status?: string
+  dasher_name?: string
+  dasher_phone_number?: string
+  estimated_pickup_time?: string
+  estimated_dropoff_time?: string
+  tracking_url?: string
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -61,6 +71,22 @@ const CANCELLABLE_STATUSES = [
   "ARRIVED_AT_PICKUP",
 ]
 
+const ACTIVE_DELIVERY_STATUSES = [
+  "CONFIRMED",
+  "DRIVER_ASSIGNED",
+  "ENROUTE_TO_PICKUP",
+  "ARRIVED_AT_PICKUP",
+  "PICKED_UP",
+  "ENROUTE_TO_DROPOFF",
+  "ARRIVED_AT_DROPOFF",
+]
+
+function formatETA(iso?: string) {
+  if (!iso) return null
+  const date = new Date(iso)
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+}
+
 export default function OrderCard({
   order,
   onConfirm,
@@ -75,6 +101,39 @@ export default function OrderCard({
   loading?: boolean
 }) {
   const items = order.items as OrderItem[]
+  const [trackingOpen, setTrackingOpen] = useState(false)
+  const [ddStatus, setDdStatus] = useState<DoorDashStatus | null>(null)
+  const [trackingLoading, setTrackingLoading] = useState(false)
+  const [trackingError, setTrackingError] = useState<string | null>(null)
+
+  const showTrackingButton =
+    order.fulfillment === "DELIVERY" && ACTIVE_DELIVERY_STATUSES.includes(order.status)
+
+  const fetchTracking = useCallback(async () => {
+    setTrackingLoading(true)
+    setTrackingError(null)
+    try {
+      const res = await fetch(`/api/doordash/status/${order.id}`)
+      if (!res.ok) {
+        const data = await res.json()
+        setTrackingError(data.error || "Could not load tracking info")
+        return
+      }
+      const data: DoorDashStatus = await res.json()
+      setDdStatus(data)
+    } catch {
+      setTrackingError("Could not load tracking info")
+    } finally {
+      setTrackingLoading(false)
+    }
+  }, [order.id])
+
+  function toggleTracking() {
+    if (!trackingOpen && !ddStatus) {
+      fetchTracking()
+    }
+    setTrackingOpen((v) => !v)
+  }
 
   return (
     <Card>
@@ -122,7 +181,86 @@ export default function OrderCard({
           </div>
         </div>
 
-        {order.ddTrackingUrl && (
+        {showTrackingButton && (
+          <div className="border-t pt-2 space-y-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleTracking}
+                className="text-sm text-blue-600 hover:underline font-medium"
+              >
+                {trackingOpen ? "▾ Hide Tracking" : "▸ Show Tracking"}
+              </button>
+              {trackingOpen && ddStatus && (
+                <button
+                  onClick={fetchTracking}
+                  className="text-xs text-muted-foreground hover:underline"
+                  disabled={trackingLoading}
+                >
+                  {trackingLoading ? "Refreshing..." : "↻ Refresh"}
+                </button>
+              )}
+            </div>
+
+            {trackingOpen && (
+              <div className="bg-muted/50 rounded-md p-3 text-sm space-y-1">
+                {trackingLoading && !ddStatus && (
+                  <p className="text-muted-foreground">Loading...</p>
+                )}
+                {trackingError && (
+                  <p className="text-red-600">{trackingError}</p>
+                )}
+                {ddStatus && (
+                  <>
+                    {ddStatus.delivery_status && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Status</span>
+                        <span className="capitalize font-medium">
+                          {ddStatus.delivery_status.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    )}
+                    {ddStatus.dasher_name && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Dasher</span>
+                        <span>{ddStatus.dasher_name}</span>
+                      </div>
+                    )}
+                    {ddStatus.dasher_phone_number && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Dasher Phone</span>
+                        <span>{ddStatus.dasher_phone_number}</span>
+                      </div>
+                    )}
+                    {ddStatus.estimated_pickup_time && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Est. Pickup</span>
+                        <span>{formatETA(ddStatus.estimated_pickup_time)}</span>
+                      </div>
+                    )}
+                    {ddStatus.estimated_dropoff_time && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Est. Dropoff</span>
+                        <span>{formatETA(ddStatus.estimated_dropoff_time)}</span>
+                      </div>
+                    )}
+                    {order.ddTrackingUrl && (
+                      <a
+                        href={order.ddTrackingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-blue-600 hover:underline pt-1"
+                      >
+                        Open Customer Tracking Link ↗
+                      </a>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!showTrackingButton && order.ddTrackingUrl && (
           <a
             href={order.ddTrackingUrl}
             target="_blank"
