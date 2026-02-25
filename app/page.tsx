@@ -40,7 +40,7 @@ export default function LandingPage() {
               href="/sign-up"
               className="bg-primary text-primary-foreground px-8 py-3 rounded-md text-lg font-medium hover:bg-primary/90"
             >
-              Start Free
+              Start Free — No Contract Required
             </Link>
             <a
               href="#calculator"
@@ -248,7 +248,7 @@ export default function LandingPage() {
               href="/sign-up"
               className="bg-primary text-primary-foreground px-8 py-3 rounded-md text-lg font-medium hover:bg-primary/90"
             >
-              Start Free
+              Start Free — No Contract Required
             </Link>
           </div>
         </div>
