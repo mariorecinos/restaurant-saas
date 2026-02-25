@@ -49,6 +49,7 @@ export default function Cart({
   const [cardName, setCardName] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [addressError, setAddressError] = useState("")
+  const [orderError, setOrderError] = useState("")
   const [turnstileToken, setTurnstileToken] = useState("")
   const turnstileRef = useRef<TurnstileInstance>(null)
 
@@ -63,6 +64,7 @@ export default function Cart({
     e.preventDefault()
     setSubmitting(true)
     setAddressError("")
+    setOrderError("")
 
     try {
       // Validate delivery address via DoorDash quote
@@ -112,11 +114,13 @@ export default function Cart({
       if (res.ok) {
         onOrderPlaced()
       } else {
+        const data = await res.json().catch(() => ({}))
+        setOrderError(data.error || "Something went wrong. Please try again.")
         turnstileRef.current?.reset()
         setTurnstileToken("")
       }
-    } catch (error) {
-      console.error("Error placing order:", error)
+    } catch {
+      setOrderError("Something went wrong. Please try again.")
       turnstileRef.current?.reset()
       setTurnstileToken("")
     } finally {
@@ -413,6 +417,12 @@ export default function Cart({
                 </p>
               )}
             </div>
+          )}
+
+          {orderError && (
+            <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+              {orderError}
+            </p>
           )}
 
           {TURNSTILE_SITE_KEY && (
