@@ -248,7 +248,7 @@ export default function LandingPage() {
               href="/sign-up"
               className="bg-primary text-primary-foreground px-8 py-3 rounded-md text-lg font-medium hover:bg-primary/90"
             >
-              Start Free — No Credit Card Required
+              Start Free
             </Link>
           </div>
         </div>
