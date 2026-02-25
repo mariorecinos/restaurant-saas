@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { calculateCustomerDeliveryFee, calculateSavings } from "@/lib/utils"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { verifyTurnstile } from "@/lib/turnstile"
 
 const CreateOrderSchema = z.object({
   restaurantId: z.string().min(1),
@@ -22,6 +23,7 @@ const CreateOrderSchema = z.object({
     .max(50),
   tip: z.number().int().min(0).max(100000).optional().default(0),
   stripePaymentId: z.string().optional(),
+  turnstileToken: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -53,7 +55,18 @@ export async function POST(request: NextRequest) {
       items,
       tip,
       stripePaymentId,
+      turnstileToken,
     } = parsed.data
+
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      const valid = await verifyTurnstile(turnstileToken ?? "", getClientIp(request))
+      if (!valid) {
+        return NextResponse.json(
+          { error: "Bot verification failed. Please try again." },
+          { status: 403 }
+        )
+      }
+    }
 
     if (fulfillment === "DELIVERY" && !customerAddress) {
       return NextResponse.json(
