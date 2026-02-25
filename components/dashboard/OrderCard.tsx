@@ -20,6 +20,7 @@ interface Order {
   items: OrderItem[]
   subtotal: number
   deliveryFee: number
+  marketplaceFee: number
   savings: number
   status: string
   ddTrackingUrl: string | null
@@ -111,8 +112,8 @@ export default function OrderCard({
           </div>
           {order.fulfillment === "DELIVERY" && (
             <div className="flex justify-between text-sm">
-              <span>Delivery Fee</span>
-              <span>{formatCents(order.deliveryFee)}</span>
+              <span>DoorDash Drive Cost</span>
+              <span>{formatCents(order.marketplaceFee - order.savings)}</span>
             </div>
           )}
           <div className="flex justify-between text-sm font-semibold text-green-600">

@@ -19,6 +19,7 @@ interface Order {
   items: OrderItem[]
   subtotal: number
   deliveryFee: number
+  marketplaceFee: number
   savings: number
   status: string
   ddTrackingUrl: string | null
