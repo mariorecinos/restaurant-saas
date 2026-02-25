@@ -16,10 +16,10 @@ const EVENT_STATUS_MAP: Record<string, OrderStatus> = {
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate shared secret if configured
+    // Validate DoorDash Basic auth header if configured
     const webhookSecret = process.env.DOORDASH_WEBHOOK_SECRET
     if (webhookSecret) {
-      const incoming = request.headers.get("x-webhook-secret")
+      const incoming = request.headers.get("authorization")
       if (incoming !== webhookSecret) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
