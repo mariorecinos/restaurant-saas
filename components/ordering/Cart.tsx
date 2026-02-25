@@ -1,12 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
+import { Turnstile } from "@marsidev/react-turnstile"
+import type { TurnstileInstance } from "@marsidev/react-turnstile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { formatCents, calculateCustomerDeliveryFee, type DeliveryFeeConfig } from "@/lib/utils"
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 export interface CartItem {
   menuItemId: string
@@ -45,6 +49,8 @@ export default function Cart({
   const [cardName, setCardName] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [addressError, setAddressError] = useState("")
+  const [turnstileToken, setTurnstileToken] = useState("")
+  const turnstileRef = useRef<TurnstileInstance>(null)
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -99,14 +105,20 @@ export default function Cart({
             price: item.price,
             quantity: item.quantity,
           })),
+          ...(turnstileToken ? { turnstileToken } : {}),
         }),
       })
 
       if (res.ok) {
         onOrderPlaced()
+      } else {
+        turnstileRef.current?.reset()
+        setTurnstileToken("")
       }
     } catch (error) {
       console.error("Error placing order:", error)
+      turnstileRef.current?.reset()
+      setTurnstileToken("")
     } finally {
       setSubmitting(false)
     }
@@ -403,7 +415,22 @@ export default function Cart({
             </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={submitting}>
+          {TURNSTILE_SITE_KEY && (
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={TURNSTILE_SITE_KEY}
+              onSuccess={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken("")}
+              onExpire={() => setTurnstileToken("")}
+              options={{ theme: "light" }}
+            />
+          )}
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={submitting || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
+          >
             {submitting ? "Placing Order..." : "Place Order"}
           </Button>
         </form>
