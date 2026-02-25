@@ -67,17 +67,12 @@ export default function Cart({
     setOrderError("")
 
     try {
-      // Validate delivery address via DoorDash quote
+      // Validate delivery address via geocoding
       if (fulfillment === "DELIVERY") {
         const validateRes = await fetch("/api/doordash/validate-address", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            restaurantId,
-            customerAddress,
-            customerPhone,
-            customerName,
-          }),
+          body: JSON.stringify({ customerAddress }),
         })
 
         const validateData = await validateRes.json()
