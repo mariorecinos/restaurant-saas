@@ -1,10 +1,49 @@
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { calculateCustomerDeliveryFee, calculateSavings } from "@/lib/utils"
+import { rateLimit, getClientIp } from "@/lib/rate-limit"
+
+const CreateOrderSchema = z.object({
+  restaurantId: z.string().min(1),
+  customerName: z.string().min(1).max(100),
+  customerPhone: z.string().min(7).max(20),
+  customerAddress: z.string().max(500).optional(),
+  fulfillment: z.enum(["DELIVERY", "PICKUP"]),
+  items: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        price: z.number().int().positive(),
+        quantity: z.number().int().positive().max(100),
+      })
+    )
+    .min(1)
+    .max(50),
+  tip: z.number().int().min(0).max(100000).optional().default(0),
+  stripePaymentId: z.string().optional(),
+})
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request)
+  const { allowed } = rateLimit(`orders:${ip}`, 20, 60_000)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    )
+  }
+
   try {
-    const body = await request.json()
+    const rawBody = await request.json()
+    const parsed = CreateOrderSchema.safeParse(rawBody)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
     const {
       restaurantId,
       customerName,
@@ -12,13 +51,19 @@ export async function POST(request: NextRequest) {
       customerAddress,
       fulfillment,
       items,
-      tip = 0,
+      tip,
       stripePaymentId,
-    } = body
+    } = parsed.data
+
+    if (fulfillment === "DELIVERY" && !customerAddress) {
+      return NextResponse.json(
+        { error: "Delivery address is required for delivery orders" },
+        { status: 400 }
+      )
+    }
 
     const subtotal = items.reduce(
-      (sum: number, item: { price: number; quantity: number }) =>
-        sum + item.price * item.quantity,
+      (sum, item) => sum + item.price * item.quantity,
       0
     )
 
@@ -37,7 +82,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Restaurant not found" }, { status: 404 })
     }
 
-    // Customer-facing delivery fee (what customer pays)
     const customerDeliveryFee = calculateCustomerDeliveryFee(subtotal, fulfillment, {
       deliveryFee: restaurant.deliveryFee,
       reducedFee: restaurant.reducedFee,
@@ -45,7 +89,6 @@ export async function POST(request: NextRequest) {
       freeDeliveryMin: restaurant.freeDeliveryMin,
     })
 
-    // Restaurant savings (marketplace fee vs DoorDash Drive cost)
     const savings = calculateSavings(subtotal, fulfillment, restaurant.passTip, tip)
 
     const order = await prisma.order.create({

@@ -36,7 +36,17 @@ export default function MenuDisplay({
           <h2 className="text-xl font-bold mb-4">{category}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {categoryItems.map((item) => (
-              <Card key={item.id} className="hover:shadow-md transition-shadow">
+              <Card key={item.id} className="hover:shadow-md transition-shadow overflow-hidden">
+                {item.image && (
+                  <div className="w-full h-40 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">{item.name}</CardTitle>
                 </CardHeader>

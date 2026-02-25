@@ -68,7 +68,9 @@ export async function createQuote(params: DeliveryParams) {
     tip: params.tipCents,
   }
 
-  console.log("[DoorDash] Quote payload:", JSON.stringify(body, null, 2))
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[DoorDash] Quote payload:", JSON.stringify(body, null, 2))
+  }
 
   const response = await fetch(`${DOORDASH_BASE_URL}/quotes`, {
     method: "POST",

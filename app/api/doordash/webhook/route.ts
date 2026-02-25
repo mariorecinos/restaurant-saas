@@ -16,10 +16,21 @@ const EVENT_STATUS_MAP: Record<string, OrderStatus> = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate shared secret if configured
+    const webhookSecret = process.env.DOORDASH_WEBHOOK_SECRET
+    if (webhookSecret) {
+      const incoming = request.headers.get("x-webhook-secret")
+      if (incoming !== webhookSecret) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+    }
+
     const body = await request.json()
     const { event_name, external_delivery_id, tracking_url } = body
 
-    console.log("[DoorDash Webhook]", event_name, external_delivery_id)
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[DoorDash Webhook]", event_name, external_delivery_id)
+    }
 
     const newStatus = EVENT_STATUS_MAP[event_name]
     if (!newStatus) {
@@ -32,7 +43,8 @@ export async function POST(request: NextRequest) {
     })
 
     if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 })
+      // Return 200 so DoorDash doesn't retry — this can happen for validation quotes
+      return NextResponse.json({ message: "Order not found, acknowledged" }, { status: 200 })
     }
 
     await prisma.order.update({

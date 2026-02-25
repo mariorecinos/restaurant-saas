@@ -37,6 +37,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (order.ddDeliveryId) {
+      return NextResponse.json(
+        { error: "Delivery already dispatched for this order" },
+        { status: 409 }
+      )
+    }
+
     // Step 1: Create quote
     const quote = await createQuote({
       orderId: order.id,

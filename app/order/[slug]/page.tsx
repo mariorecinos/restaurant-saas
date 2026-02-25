@@ -129,9 +129,19 @@ export default function OrderPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold">{restaurant.name}</h1>
-          <p className="text-muted-foreground">{restaurant.address}</p>
+        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center gap-4">
+          {restaurant.logo && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={restaurant.logo}
+              alt={restaurant.name}
+              className="w-16 h-16 rounded-full object-cover border"
+            />
+          )}
+          <div>
+            <h1 className="text-3xl font-bold">{restaurant.name}</h1>
+            <p className="text-muted-foreground">{restaurant.address}</p>
+          </div>
         </div>
       </header>
       <div className="max-w-7xl mx-auto px-4 py-8">
