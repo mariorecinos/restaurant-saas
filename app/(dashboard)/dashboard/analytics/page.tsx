@@ -77,7 +77,7 @@ export default function AnalyticsPage() {
     (o) => o.fulfillment === "PICKUP"
   ).length
   const totalFeesPaid = thisMonthOrders.reduce(
-    (s, o) => s + o.deliveryFee,
+    (s, o) => s + (o.fulfillment === "DELIVERY" ? o.marketplaceFee - o.savings : 0),
     0
   )
   const totalSaved = thisMonthOrders.reduce((s, o) => s + o.savings, 0)
